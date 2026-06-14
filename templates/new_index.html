@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Psychology Fixings</title>
+    <style>
+        /* 1. SKY BACKGROUND */
+        body {
+            background: linear-gradient(to bottom, #74b9ff, #a29bfe); /* Light blue to pastel purple sky */
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 2. TEXT COLORS INSIDE TERMINAL */
+        .terminal {
+            background-color: rgba(26, 26, 30, 0.95); /* Slightly transparent dark background */
+            border: 2px solid #5f27cd; /* Purple border */
+            border-radius: 8px;
+            width: 500px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 10; /* Keeps terminal in front of the clouds */
+        }
+        .header {
+            border-bottom: 2px dashed #5f27cd;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #ff007f; /* Bright pink header text! */
+            font-weight: bold;
+        }
+        .output-text {
+            line-height: 1.6;
+            margin-bottom: 20px;
+            white-space: pre-line;
+            color: #00eaff; /* Cyan / Neon Blue body text! */
+        }
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+        input[type="text"] {
+            flex-grow: 1;
+            background-color: #202024;
+            border: 1px solid #5f27cd;
+            color: #ffff00; /* Yellow typing text! */
+            padding: 10px;
+            font-family: inherit;
+            border-radius: 4px;
+            outline: none;
+        }
+        input[type="text"]:focus {
+            border-color: #ff007f;
+        }
+        button {
+            background-color: #ff007f; /* Pink button */
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-weight: bold;
+            font-family: inherit;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        /* 3. CLOUD GRAPHICS & ANIMATION */
+        .cloud {
+            width: 150px;
+            height: 40px;
+            background: #fff;
+            border-radius: 20px;
+            position: absolute;
+            opacity: 0.8;
+        }
+        .cloud:before, .cloud:after {
+            content: '';
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+        }
+        .cloud:before {
+            width: 50px;
+            height: 50px;
+            top: -20px;
+            left: 20px;
+        }
+        .cloud:after {
+            width: 70px;
+            height: 70px;
+            top: -35px;
+            right: 20px;
+        }
+
+        /* Position individual clouds and give them different speeds */
+        .cloud1 { top: 10%; animation: float 25s linear infinite; }
+        .cloud2 { top: 25%; animation: float 35s linear infinite; animation-delay: -10s; }
+        .cloud3 { top: 65%; animation: float 30s linear infinite; animation-delay: -5s; }
+        .cloud4 { top: 80%; animation: float 40s linear infinite; animation-delay: -20s; }
+
+        @keyframes float {
+            0% { left: -200px; }
+            100% { left: 100vw; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="cloud cloud1"></div>
+<div class="cloud cloud2"></div>
+<div class="cloud cloud3"></div>
+<div class="cloud cloud4"></div>
+
+<div class="terminal">
+    <div class="header">=== PSYCHOLOGY FIXINGS ===</div>
+    <div class="output-text" id="output">Hello, welcome to Psychology Fixings!<br>How are you feeling today?</div>
+    <div class="input-area" id="input-container">
+        <input type="text" id="user-input" placeholder="Type here..." autofocus>
+        <button onclick="handleSubmit()">Submit</button>
+    </div>
+</div>
+
+<script>
+    let step = "GREET";
+    let savedMood = "";
+    let savedPrice = 0;
+
+    const outputEl = document.getElementById("output");
+    const inputEl = document.getElementById("user-input");
+
+    async function handleSubmit() {
+        const value = inputEl.value.trim();
+        if (!value) return;
+        inputEl.value = "";
+
+        if (step === "GREET") {
+            savedMood = value;
+            const response = await fetch('/process_mood', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ mood: value })
+            });
+            const data = await response.json();
+
+            savedPrice = data.price;
+            outputEl.innerText = data.text + "\n\n" + data.prompt;
+            step = "PAYMENT";
+
+        } else if (step === "PAYMENT") {
+            document.getElementById("input-container").style.display = "none";
+            outputEl.innerText = "Connecting to bank server...";
+
+            const response = await fetch('/process_payment', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ payment: value, mood: savedMood, price: savedPrice })
+            });
+            const data = await response.json();
+
+            // setTimeout(() => {
+            //     if(data.event_text) {
+            //         outputEl.innerText += data.event_text;
+            //     }
+            //     setTimeout(() => {
+            //         outputEl.innerText = data.final_text;
+            //     }, 2000);
+            // }, 1000);
+            setTimeout(() => {
+                if(data.final_text) {
+                    outputEl.innerText += data.final_text;
+                }
+                setTimeout(() => {
+                    outputEl.innerText = data.event_text;
+                }, 1000);
+            }, 2000);
+        }
+    }
+
+    inputEl.addEventListener("keypress", (e) => { if (e.key === "Enter") handleSubmit(); });
+</script>
+</body>
+</html>
