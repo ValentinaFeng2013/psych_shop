@@ -32,7 +32,7 @@ def process_mood():
     if greet in ["happy", "good", "fine"]:
         text = "Glad to hear that! Please proceed to checkout to pay."
         price = 20
-        prompt = f"Please pay ${price}. Pay now? (yes/no):"
+        prompt = f"Please pay ${price}"
     elif greet == "sad":
         if random.choice([True, False]):
             text = f"Sorry about that! Have a {choice}!"
@@ -40,19 +40,19 @@ def process_mood():
         else:
             text = "Sorry about that, but your overwhelming emotional damage is costing us three tissues.\nThat will be a $5 emotional cleanup fee."
             price = 30
-        prompt = f"Please pay ${price}. Pay now? (yes/no):"
+        prompt = f"Please pay ${price}"
     elif greet in ["angry", "mad", "miffed", "annoyed"]:
         text = f"Oof! Why don't you take a {angry_item} to calm down?."
         price = 27
-        prompt = f"Please pay ${price}. Pay now? (yes/no):"
+        prompt = f"Please pay ${price}"
     elif greet in ["tired", "bored"]:
         text = "You should take a nap! Although sleep is free, our advice is not."
         price = 23
-        prompt = f"Please pay ${price}. Pay now? (yes/no):"
+        prompt = f"Please pay ${price}"
     else:
         text = f"We don't recognize that emotion. Have a {choice}!"
         price = 29
-        prompt = f"Please pay ${price}. Pay now? (yes/no):"
+        prompt = f"Please pay ${price}."
 
     return jsonify({'text': text, 'prompt': prompt, 'price': price})
 
