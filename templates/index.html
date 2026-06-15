@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Psych Shop</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fdf4ff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(160, 90, 200, 0.15);
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #7c3aed;
+      margin-bottom: 0.25rem;
+    }
+
+    .subtitle {
+      color: #a78bfa;
+      font-size: 0.95rem;
+      margin-bottom: 2rem;
+    }
+
+    label {
+      display: block;
+      text-align: left;
+      font-weight: 600;
+      color: #4b5563;
+      margin-bottom: 0.4rem;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 0.65rem 1rem;
+      border: 2px solid #ddd6fe;
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: #7c3aed;
+    }
+
+    button {
+      margin-top: 1rem;
+      width: 100%;
+      padding: 0.7rem;
+      background: #7c3aed;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover { background: #6d28d9; }
+    button:disabled { background: #c4b5fd; cursor: not-allowed; }
+
+    .message-box {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: #f5f3ff;
+      border-radius: 10px;
+      color: #374151;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      text-align: left;
+      display: none;
+    }
+
+    .event-box {
+      margin-top: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      border-radius: 8px;
+      color: #92400e;
+      line-height: 1.5;
+      text-align: left;
+      white-space: pre-wrap;
+      display: none;
+    }
+
+    .payment-section {
+      display: none;
+      margin-top: 1.5rem;
+    }
+
+    .reset-btn {
+      margin-top: 1rem;
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .reset-btn:hover { background: #d1d5db; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Welcome to Psychology Fixings!</h1>
+    <p class="subtitle">             </p>
+
+    <div id="mood-section">
+      <label for="mood-input">How are you feeling today?</label>
+      <input type="text" id="mood-input" placeholder="happy, sad, angry, tired…" />
+      <button id="mood-btn" onclick="submitMood()">Tell us your mood</button>
+    </div>
+
+    <div class="message-box" id="message-box"></div>
+    <div class="event-box" id="event-box"></div>
+
+    <div class="payment-section" id="payment-section">
+      <label for="pay-input">Your answer (yes / no):</label>
+      <input type="text" id="pay-input" placeholder="yes or no" />
+      <button onclick="submitPayment()">Submit</button>
+    </div>
+
+    <button class="reset-btn" id="reset-btn" onclick="reset()" style="display:none;">click for new apointment</button>
+  </div>
+
+  <script>
+    let currentMood = '';
+    let currentPrice = 0;
+
+    async function submitMood() {
+      const mood = document.getElementById('mood-input').value.trim();
+      if (!mood) return;
+      currentMood = mood;
+
+      const btn = document.getElementById('mood-btn');
+      btn.disabled = true;
+      btn.textContent = 'Thinking…';
+
+      const res = await fetch('/process_mood', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mood })
+      });
+      const data = await res.json();
+      currentPrice = data.price;
+
+      const msgBox = document.getElementById('message-box');
+      msgBox.textContent = data.text + '\n\n' + data.prompt;
+      msgBox.style.display = 'block';
+
+      document.getElementById('mood-section').style.display = 'none';
+      document.getElementById('payment-section').style.display = 'block';
+    }
+
+    async function submitPayment() {
+      const payment = document.getElementById('pay-input').value.trim();
+      if (!payment) return;
+
+      const res = await fetch('/process_payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payment, mood: currentMood, price: currentPrice })
+      });
+      const data = await res.json();
+
+      if (data.event_text) {
+        const eventBox = document.getElementById('event-box');
+        eventBox.textContent = data.event_text.trim();
+        eventBox.style.display = 'block';
+      }
+
+      const msgBox = document.getElementById('message-box');
+      msgBox.textContent = data.final_text;
+
+      document.getElementById('payment-section').style.display = 'none';
+      document.getElementById('reset-btn').style.display = 'block';
+    }
+
+    function reset() {
+      document.getElementById('mood-input').value = '';
+      document.getElementById('pay-input').value = '';
+      document.getElementById('message-box').style.display = 'none';
+      document.getElementById('event-box').style.display = 'none';
+      document.getElementById('payment-section').style.display = 'none';
+      document.getElementById('reset-btn').style.display = 'none';
+      document.getElementById('mood-section').style.display = 'block';
+      const btn = document.getElementById('mood-btn');
+      btn.disabled = false;
+      btn.textContent = 'Tell us your mood';
+      currentMood = '';
+      currentPrice = 0;
+    }
+
+    document.getElementById('mood-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') submitMood();
+    });
+    document.getElementById('pay-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') submitPayment();
+    });
+  </script>
+</body>
+</html>

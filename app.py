@@ -46,7 +46,7 @@ def process_mood():
         price = 27
         prompt = f"Please pay ${price}. Pay now? (yes/no):"
     elif greet in ["tired", "bored"]:
-        text = "You should take a nap! Sleep is free, but our advice is not."
+        text = "You should take a nap! Although sleep is free, our advice is not."
         price = 23
         prompt = f"Please pay ${price}. Pay now? (yes/no):"
     else:
@@ -66,7 +66,7 @@ def process_payment():
 
     # 20% chance of random event
     event_text = ""
-    if random.random() < 1.0:
+    if random.random() < 0.15:
         event = random.choice([
             "A raccoon broke into the cash register! Please pay $55 for our damages",
             "A robber broke in. We are now charging everyone an extra 5 dollars."
