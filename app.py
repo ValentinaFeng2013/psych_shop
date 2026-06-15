@@ -66,7 +66,7 @@ def process_payment():
 
     # 20% chance of random event
     event_text = ""
-    if random.random() < 1.0:
+    if random.random() < 0.15:
         event = random.choice([
             "A raccoon broke into the cash register! Please pay $55 for our damages",
             "A robber broke in. We are now charging everyone an extra 5 dollars."
