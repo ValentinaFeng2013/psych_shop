@@ -9,7 +9,7 @@
 
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #fdf4ff;
+      background: #c4b5fd;
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -114,10 +114,84 @@
     }
 
     .reset-btn:hover { background: #d1d5db; }
+
+    .loading-box {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: #f5f3ff;
+      border-radius: 10px;
+      color: #7c3aed;
+      font-weight: 600;
+      display: none;
+    }
+
+    .dots::after {
+      content: '';
+      animation: dots 1.2s steps(3, end) infinite;
+    }
+
+    @keyframes dots {
+      0%   { content: '.'; }
+      33%  { content: '..'; }
+      66%  { content: '...'; }
+      100% { content: ''; }
+    }
+
+    .clouds {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .cloud {
+      position: absolute;
+      background: white;
+      border-radius: 50px;
+      opacity: 0.75;
+      animation: float linear infinite;
+    }
+
+    .cloud::before,
+    .cloud::after {
+      content: '';
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+    }
+
+    .cloud::before {
+      width: 55%;
+      height: 160%;
+      top: -60%;
+      left: 15%;
+    }
+
+    .cloud::after {
+      width: 40%;
+      height: 130%;
+      top: -45%;
+      right: 15%;
+    }
+
+    @keyframes float {
+      from { transform: translateX(-220px); }
+      to   { transform: translateX(110vw); }
+    }
   </style>
 </head>
 <body>
-  <div class="card">
+  <div class="clouds">
+    <div class="cloud" style="width:180px;height:55px;top:8%;animation-duration:28s;animation-delay:0s;"></div>
+    <div class="cloud" style="width:120px;height:38px;top:20%;animation-duration:22s;animation-delay:-8s;"></div>
+    <div class="cloud" style="width:220px;height:65px;top:35%;animation-duration:35s;animation-delay:-15s;"></div>
+    <div class="cloud" style="width:150px;height:45px;top:55%;animation-duration:25s;animation-delay:-5s;"></div>
+    <div class="cloud" style="width:100px;height:32px;top:70%;animation-duration:20s;animation-delay:-12s;"></div>
+    <div class="cloud" style="width:200px;height:60px;top:82%;animation-duration:32s;animation-delay:-20s;"></div>
+  </div>
+  <div class="card" style="position:relative;z-index:1;">
     <h1>Welcome to Psychology Fixings!</h1>
     <p class="subtitle">             </p>
 
@@ -127,11 +201,12 @@
       <button id="mood-btn" onclick="submitMood()">Tell us your mood</button>
     </div>
 
+    <div class="loading-box" id="loading-box">Connecting to bank server<span class="dots"></span></div>
     <div class="message-box" id="message-box"></div>
     <div class="event-box" id="event-box"></div>
 
     <div class="payment-section" id="payment-section">
-      <label for="pay-input">Your answer (yes / no):</label>
+      <label for="pay-input">Pay now? (yes / no):</label>
       <input type="text" id="pay-input" placeholder="yes or no" />
       <button onclick="submitPayment()">Submit</button>
     </div>
@@ -172,12 +247,20 @@
       const payment = document.getElementById('pay-input').value.trim();
       if (!payment) return;
 
+      document.getElementById('payment-section').style.display = 'none';
+      document.getElementById('message-box').style.display = 'none';
+      document.getElementById('loading-box').style.display = 'block';
+
+      await new Promise(r => setTimeout(r, 2000));
+
       const res = await fetch('/process_payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ payment, mood: currentMood, price: currentPrice })
       });
       const data = await res.json();
+
+      document.getElementById('loading-box').style.display = 'none';
 
       if (data.event_text) {
         const eventBox = document.getElementById('event-box');
@@ -187,6 +270,7 @@
 
       const msgBox = document.getElementById('message-box');
       msgBox.textContent = data.final_text;
+      msgBox.style.display = 'block';
 
       document.getElementById('payment-section').style.display = 'none';
       document.getElementById('reset-btn').style.display = 'block';
@@ -197,6 +281,7 @@
       document.getElementById('pay-input').value = '';
       document.getElementById('message-box').style.display = 'none';
       document.getElementById('event-box').style.display = 'none';
+      document.getElementById('loading-box').style.display = 'none';
       document.getElementById('payment-section').style.display = 'none';
       document.getElementById('reset-btn').style.display = 'none';
       document.getElementById('mood-section').style.display = 'block';
