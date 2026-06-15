@@ -17,7 +17,7 @@ hehe_responses = [
 @app.route('/')
 def home():
     # Serves the main website page
-    return render_template('new_index.html')
+    return render_template('index.html')
 
 
 @app.route('/process_mood', methods=['POST'])
